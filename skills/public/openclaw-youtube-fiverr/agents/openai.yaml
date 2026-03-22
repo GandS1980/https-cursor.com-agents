@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenClaw YouTube Fiverr"
+  short_description: "Plan YouTube promotion for Fiverr gigs"
+  default_prompt: "Use $openclaw-youtube-fiverr to help OpenClaw draft a YouTube channel profile and promotion plan for my Fiverr services."
