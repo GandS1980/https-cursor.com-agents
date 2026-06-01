@@ -1,0 +1,3 @@
+[submodule "Patter"]
+	path = Patter
+	url = https://github.com/PatterAI/Patter.git
