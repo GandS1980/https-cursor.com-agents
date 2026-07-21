@@ -28,9 +28,9 @@ export class SalesWrapper {
     this.store = new SalesStore();
     this.ai = new OpenClawClient(this.config.openclaw);
 
-    this.leads = new LeadGenerationModule(this.store, this.ai);
+    this.leads = new LeadGenerationModule(this.store, this.ai, this.config.product);
     this.appointments = new AppointmentSchedulerModule(this.store, this.ai);
-    this.calls = new SalesCallModule(this.store, this.ai);
+    this.calls = new SalesCallModule(this.store, this.ai, this.config.product);
     this.deals = new DealPipelineModule(this.store, this.ai);
   }
 
@@ -59,7 +59,7 @@ export class SalesWrapper {
     if (result.qualified && autoSchedule) {
       result.appointment = await this.appointments.scheduleAppointment({
         leadId: lead.id,
-        topic: `Intro call with ${lead.name} from ${lead.company}`,
+        topic: `${this.config.product.name} demo with ${lead.name} from ${lead.company}`,
       });
     }
 

@@ -128,10 +128,40 @@ export interface OpenClawResponse {
   usage?: { promptTokens: number; completionTokens: number };
 }
 
+// ── Product Config ──────────────────────────────────────────────────────────
+
+/** Ideal customer profile used to steer AI qualification and outreach. */
+export interface IdealCustomerProfile {
+  companyTypes: string[];
+  buyerTitles: string[];
+  /** Signals that indicate buying intent (e.g. hiring spikes, new funding). */
+  buyingSignals: string[];
+  /** Attributes that disqualify a prospect regardless of other fit. */
+  disqualifiers: string[];
+}
+
+/** What we're selling — injected into every AI prompt in the pipeline. */
+export interface ProductConfig {
+  name: string;
+  /** One-line pitch used across outreach and calls. */
+  pitch: string;
+  /** Pain points the product solves, in the buyer's language. */
+  painPoints: string[];
+  icp: IdealCustomerProfile;
+  /** Pricing anchor to set expectations on calls (e.g. "from $99/seat/mo"). */
+  pricing: string;
+  competitors: string[];
+  /** Objection → how to handle it. */
+  objectionHandling: Record<string, string>;
+  /** Call-to-action used in outreach and follow-ups. */
+  cta: string;
+}
+
 // ── Sales Wrapper Config ────────────────────────────────────────────────────
 
 export interface SalesWrapperConfig {
   openclaw: OpenClawConfig;
+  product: ProductConfig;
   leadScoreThreshold: number;
   autoFollowUp: boolean;
   maxCallAttempts: number;

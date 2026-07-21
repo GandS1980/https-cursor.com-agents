@@ -1,17 +1,27 @@
 import { v4 as uuid } from "uuid";
-import { Lead, LeadStatus } from "../types";
+import { Lead, LeadStatus, ProductConfig } from "../types";
 import { SalesStore } from "../store";
 import { OpenClawClient } from "../openclaw-client";
 
-const LEAD_QUALIFIER_PROMPT = `You are an expert sales qualification AI.
+function leadQualifierPrompt(product: ProductConfig): string {
+  return `You are an expert sales qualification AI for ${product.name}.
+${product.pitch}
+
+Ideal customer profile:
+- Company types: ${product.icp.companyTypes.join("; ")}
+- Buyer titles: ${product.icp.buyerTitles.join("; ")}
+- Buying signals (score higher when present): ${product.icp.buyingSignals.join("; ")}
+- Disqualifiers (score below 30 when present): ${product.icp.disqualifiers.join("; ")}
+
 Given information about a prospect, return a JSON object with:
-- "score": number 0-100 indicating how qualified the lead is
+- "score": number 0-100 indicating how well they fit the profile above
 - "status": one of "new", "qualified", or "contacted"
-- "notes": array of strings with key observations
+- "notes": array of strings with key observations (call out which ICP signals matched or are missing)
 - "suggestedOutreach": a short personalised outreach message
 
-Evaluate based on: company size, industry fit, budget indicators, decision-making authority, timeline urgency, and pain-point alignment.
+Score primarily on ICP fit, buying signals, and the contact's decision-making authority.
 Respond ONLY with valid JSON.`;
+}
 
 export interface ProspectInput {
   name: string;
@@ -25,7 +35,8 @@ export interface ProspectInput {
 export class LeadGenerationModule {
   constructor(
     private store: SalesStore,
-    private ai: OpenClawClient
+    private ai: OpenClawClient,
+    private product: ProductConfig
   ) {}
 
   /**
@@ -33,7 +44,7 @@ export class LeadGenerationModule {
    */
   async ingestProspect(input: ProspectInput): Promise<Lead> {
     const qualificationResponse = await this.ai.prompt(
-      LEAD_QUALIFIER_PROMPT,
+      leadQualifierPrompt(this.product),
       JSON.stringify(input)
     );
 
@@ -92,7 +103,10 @@ export class LeadGenerationModule {
       additionalContext,
     };
 
-    const response = await this.ai.prompt(LEAD_QUALIFIER_PROMPT, JSON.stringify(payload));
+    const response = await this.ai.prompt(
+      leadQualifierPrompt(this.product),
+      JSON.stringify(payload)
+    );
 
     let parsed: { score: number; status: LeadStatus; notes: string[] };
     try {
@@ -125,10 +139,16 @@ export class LeadGenerationModule {
     if (!lead) throw new Error(`Lead ${leadId} not found`);
 
     return this.ai.prompt(
-      `You are a professional sales development representative.
-Write a brief, personalised cold outreach email for this prospect.
-Be warm, specific to their company, and end with a clear CTA to book a call.
-Keep it under 150 words.`,
+      `You are a sales development representative selling ${this.product.name}.
+${this.product.pitch}
+
+Write a brief, personalised cold outreach email for this prospect — a recruiting/talent buyer.
+Structure it as:
+1. Open with something specific to their company or hiring activity (e.g. their open roles), never a generic compliment.
+2. Speak to one pain point they most likely feel: ${this.product.painPoints.join("; ")}.
+3. One sentence on how ${this.product.name} addresses it — no feature lists.
+4. End with this CTA: "${this.product.cta}".
+Keep it under 150 words. No subject line hype, no exclamation marks.`,
       JSON.stringify({
         name: lead.name,
         company: lead.company,

@@ -1,7 +1,7 @@
 export { SalesWrapper } from "./sales-wrapper";
 export { OpenClawClient } from "./openclaw-client";
 export { SalesStore } from "./store";
-export { loadConfig, DEFAULT_CONFIG } from "./config";
+export { loadConfig, DEFAULT_CONFIG, RECRUITERSTACK_PRODUCT } from "./config";
 
 // Modules
 export { LeadGenerationModule } from "./modules/lead-generation";
@@ -24,6 +24,8 @@ export type {
   OpenClawMessage,
   OpenClawResponse,
   SalesWrapperConfig,
+  ProductConfig,
+  IdealCustomerProfile,
 } from "./types";
 
 export type { ProspectInput } from "./modules/lead-generation";

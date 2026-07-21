@@ -1,18 +1,33 @@
 import { v4 as uuid } from "uuid";
-import { SalesCall, CallOutcome } from "../types";
+import { SalesCall, CallOutcome, ProductConfig } from "../types";
 import { SalesStore } from "../store";
 import { OpenClawClient } from "../openclaw-client";
 
-const CALL_CONDUCTOR_PROMPT = `You are an elite AI sales agent conducting a live sales conversation.
+function callConductorPrompt(product: ProductConfig): string {
+  const objections = Object.entries(product.objectionHandling)
+    .map(([objection, response]) => `- "${objection}" → ${response}`)
+    .join("\n");
+
+  return `You are an elite AI sales agent selling ${product.name} on a live call.
+${product.pitch}
+
+Pain points to probe for: ${product.painPoints.join("; ")}
+Pricing anchor when asked: ${product.pricing}
+Competitors you may be compared against: ${product.competitors.join(", ")}
+
+Objection handling playbook:
+${objections}
+
 Your goals:
 1. Build rapport quickly
-2. Identify pain points through open-ended questions
-3. Present value propositions that map to their specific needs
-4. Handle objections with empathy and evidence
-5. Guide toward a clear next step (demo, proposal, or close)
+2. Identify which of the pain points above they actually feel, through open-ended questions
+3. Map ${product.name}'s value to their specific situation — don't recite features
+4. Handle objections using the playbook above, with empathy and evidence
+5. Guide toward a clear next step: ${product.cta}
 
 Respond with your next message in the conversation. Be natural, concise, and persuasive.
 Never be pushy — focus on understanding and helping.`;
+}
 
 const CALL_ANALYZER_PROMPT = `You are a sales call analyst. Given a conversation transcript, return JSON with:
 - "outcome": one of "interested", "follow_up", "objection", "closed_won", "closed_lost"
@@ -32,7 +47,8 @@ export interface CallMessage {
 export class SalesCallModule {
   constructor(
     private store: SalesStore,
-    private ai: OpenClawClient
+    private ai: OpenClawClient,
+    private product: ProductConfig
   ) {}
 
   /**
@@ -82,7 +98,7 @@ export class SalesCallModule {
       (c) => c.id !== callId
     );
 
-    const systemContext = `${CALL_CONDUCTOR_PROMPT}
+    const systemContext = `${callConductorPrompt(this.product)}
 
 Prospect info:
 - Name: ${lead.name}
@@ -186,8 +202,10 @@ ${previousCalls.length > 0 ? `- Previous objections: ${previousCalls.flatMap((c)
     if (!lead) throw new Error(`Lead ${call.leadId} not found`);
 
     return this.ai.prompt(
-      `You are a sales professional writing a follow-up email after a call.
-Reference specific points from the conversation. Be concise and include a clear next step.
+      `You are a sales professional at ${this.product.name} writing a follow-up email after a call.
+Reference specific points from the conversation. If objections were raised, briefly address
+them using this playbook where relevant: ${JSON.stringify(this.product.objectionHandling)}.
+Be concise and include a clear next step (default: ${this.product.cta}).
 Keep it under 150 words.`,
       JSON.stringify({
         prospect: { name: lead.name, company: lead.company },
