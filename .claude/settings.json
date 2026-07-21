@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "clay-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "clay-run/agent-plugins"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "clay@clay-plugins": true
+  }
+}
