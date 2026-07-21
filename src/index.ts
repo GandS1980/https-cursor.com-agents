@@ -8,6 +8,11 @@ export { LeadGenerationModule } from "./modules/lead-generation";
 export { AppointmentSchedulerModule } from "./modules/appointment-scheduler";
 export { SalesCallModule } from "./modules/sales-call";
 export { DealPipelineModule } from "./modules/deal-pipeline";
+export {
+  ClayIntakeModule,
+  createClayIntakeServer,
+  mapClayRow,
+} from "./modules/clay-intake";
 
 // Types
 export type {
@@ -29,5 +34,10 @@ export type {
 } from "./types";
 
 export type { ProspectInput } from "./modules/lead-generation";
+export type {
+  ClayRow,
+  ClayIntakeResult,
+  ClayIntakeServerOptions,
+} from "./modules/clay-intake";
 export type { ScheduleRequest } from "./modules/appointment-scheduler";
 export type { CallMessage } from "./modules/sales-call";

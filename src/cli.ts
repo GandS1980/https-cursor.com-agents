@@ -1,4 +1,5 @@
 import { SalesWrapper } from "./sales-wrapper";
+import { createClayIntakeServer } from "./modules/clay-intake";
 
 /**
  * Simple CLI runner demonstrating the SalesWrapper.
@@ -63,6 +64,18 @@ async function main() {
       break;
     }
 
+    case "serve": {
+      const port = Number(process.argv[3] || process.env.PORT || 3000);
+      const server = createClayIntakeServer(wrapper);
+      server.listen(port, () => {
+        console.log(`Clay intake listening on http://localhost:${port}/clay/leads`);
+        if (!process.env.CLAY_WEBHOOK_SECRET) {
+          console.log("Warning: CLAY_WEBHOOK_SECRET not set — endpoint is unauthenticated");
+        }
+      });
+      break;
+    }
+
     default: {
       console.log(`
 OpenClaw Sales Wrapper CLI
@@ -72,11 +85,14 @@ Commands:
   ingest <name> <company> <email> <source>   Ingest and qualify a prospect
   metrics                                     Show pipeline metrics
   demo                                        Run a demo workflow
+  serve [port]                                Start the Clay webhook intake server
 
 Environment variables:
   OPENCLAW_API_KEY      Your OpenClaw API key
   OPENCLAW_BASE_URL     OpenClaw API base URL (default: https://api.openclaw.ai)
   OPENCLAW_MODEL        Model to use (default: openclaw-default)
+  CLAY_WEBHOOK_SECRET   Shared secret required in x-clay-webhook-secret header
+  PORT                  Port for the intake server (default: 3000)
 `);
     }
   }

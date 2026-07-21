@@ -50,19 +50,27 @@ export class AppointmentSchedulerModule {
       title: string;
     };
 
-    try {
-      parsed = JSON.parse(aiResponse);
-    } catch {
-      // Fallback: use first preferred time or 24h from now
+    const fallback = () => {
       const fallbackTime =
         request.preferredTimes?.[0] ??
         new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-      parsed = {
+      return {
         suggestedSlot: fallbackTime,
         durationMinutes: request.durationMinutes ?? 30,
         inviteMessage: `Hi ${lead.name}, I'd love to set up a call to discuss how we can help ${lead.company}. Does this time work for you?`,
         title: `Sales Call — ${lead.company}`,
       };
+    };
+
+    try {
+      parsed = JSON.parse(aiResponse);
+      // The AI can return valid JSON with a missing or malformed datetime;
+      // an unchecked one becomes an Invalid Date that breaks every consumer.
+      if (isNaN(new Date(parsed.suggestedSlot).getTime())) {
+        parsed = fallback();
+      }
+    } catch {
+      parsed = fallback();
     }
 
     const appointment: Appointment = {

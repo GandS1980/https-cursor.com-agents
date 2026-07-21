@@ -28,6 +28,13 @@ export class SalesStore {
     return this.getAllLeads().filter((l) => l.status === status);
   }
 
+  getLeadByEmail(email: string): Lead | undefined {
+    const needle = email.trim().toLowerCase();
+    return this.getAllLeads().find(
+      (l) => l.email.trim().toLowerCase() === needle
+    );
+  }
+
   // ── Appointments ────────────────────────────────────────────────────────
 
   saveAppointment(appt: Appointment): void {
