@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "agentmail": {
+      "type": "http",
+      "url": "https://mcp.agentmail.to/mcp",
+      "headers": {
+        "Authorization": "Bearer ${AGENTMAIL_API_KEY}"
+      }
+    }
+  }
+}
