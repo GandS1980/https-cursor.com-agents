@@ -18,30 +18,30 @@ evidence:
   - 2025
   ablation:
   - variant: base
-    mae: 5.801
-    rmse: 7.497
-    cov80: 0.82
-    cov50: 0.531
-    regret: 23.729
+    mae: 5.598
+    rmse: 7.22
+    cov80: 0.819
+    cov50: 0.524
+    regret: 23.236
     promote: false
   - variant: +redzone
-    mae: 5.802
-    rmse: 7.5
-    cov80: 0.822
-    cov50: 0.532
-    regret: 23.767
+    mae: 5.616
+    rmse: 7.243
+    cov80: 0.819
+    cov50: 0.523
+    regret: 23.559
     promote: false
   - variant: +opponent
-    mae: 5.793
-    rmse: 7.472
-    cov80: 0.827
-    cov50: 0.532
-    regret: 24.05
+    mae: 5.597
+    rmse: 7.198
+    cov80: 0.818
+    cov50: 0.529
+    regret: 23.571
     promote: false
   - variant: +vegas
-    mae: 5.794
-    rmse: 7.502
-    cov80: 0.821
-    cov50: 0.533
-    regret: 23.613
+    mae: 5.547
+    rmse: 7.168
+    cov80: 0.822
+    cov50: 0.529
+    regret: 23.076
     promote: true
