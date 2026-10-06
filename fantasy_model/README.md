@@ -41,8 +41,14 @@ FG made/missed by distance bucket, and DEF points-allowed / yards-allowed tiers.
 * `validate-scoring` reports every mismatched player-week with the per-rule breakdown **and regresses
   (Yahoo − ours) on each stat to infer which weights are wrong**.
 
-> The current YAML values are placeholders. The league's exact rule values were not available when
-> this was built. Fill them in from Yahoo › League › Settings, then validate.
+> Values are transcribed from the league's Yahoo settings (league 686886). They stay `verified: false`
+> until `validate-scoring` against completed Yahoo scores returns zero mismatches. Open items it
+> settles: cumulative vs highest-tier yardage bonuses, whether blocked PATs count as "Block Kick",
+> what DEF "Return Yards" includes, and how Yahoo counts DEF points allowed.
+
+What the rules imply (2025, weekly starter-level averages): QB 45.0 · RB 29.0 · DEF 27.8 · K 25.9 ·
+WR 23.3 · TE 17.5. DEF return yards (10 yds/pt) average 11.5 pts/game — more than sacks, takeaways
+and points allowed combined — and long field goals are worth 9–12. K and DEF are not afterthoughts here.
 
 ## 2. Datasets (`bes/datasets.py`)
 

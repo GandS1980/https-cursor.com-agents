@@ -260,6 +260,7 @@ def simulate_slate(inp: SlateInputs, rules: ScoringRules, n_sims: int = 10_000, 
             "dst_safeties": rng.poisson(row["dst_safeties"], n),
             "dst_blocked_kicks": rng.poisson(row["dst_blocked_kicks"], n),
             "dst_return_yards": rng.gamma(4.0, max(row["dst_return_yards"], 1e-6) / 4.0, n),
+            "dst_extra_point_returns": rng.poisson(row.get("dst_extra_point_returns", 0.004), n),
         }
     for t, row in teams.iterrows():
         o = row["opponent"]

@@ -87,6 +87,13 @@ def build_dst_game(season_type: str = "REG") -> pd.DataFrame:
     tw = tw[tw["season_type"] == season_type]
     games = db.read_dataset("games")
     d = dst_stats_from_team_week(tw, games)
+    try:  # defensive PAT returns come from play-by-play; a game with pbp but no event is a true 0
+        ev = db.read_dataset("dst_pbp")[["game_id", "team", "dst_extra_point_returns"]]
+        d = d.drop(columns="dst_extra_point_returns").merge(ev, on=["game_id", "team"], how="left")
+        has_pbp = d["game_id"].isin(set(ev["game_id"]))
+        d.loc[has_pbp, "dst_extra_point_returns"] = d.loc[has_pbp, "dst_extra_point_returns"].fillna(0.0)
+    except FileNotFoundError:
+        pass
     d["player_name"] = d["team"] + " DEF"
     d["played"] = True
     return d

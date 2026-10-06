@@ -7,41 +7,42 @@ workload:
   team_recent_weight: 0.4
   team_prior_games: 4.0
 features:
-  redzone_td_weighting: false
-  opponent_adjustment: false
+  redzone_td_weighting: true
+  opponent_adjustment: true
   vegas_scoring: true
   vegas_weight: 0.6
 evidence:
+  scoring: Da B.E.S. league settings 2026-10-06
   tune_seasons:
   - 2024
   test_seasons:
   - 2025
   ablation:
   - variant: base
-    mae: 5.598
-    rmse: 7.22
-    cov80: 0.819
-    cov50: 0.524
-    regret: 23.236
+    mae: 8.186
+    rmse: 11.04
+    cov80: 0.809
+    cov50: 0.518
+    regret: 30.413
     promote: false
   - variant: +redzone
-    mae: 5.616
-    rmse: 7.243
-    cov80: 0.819
-    cov50: 0.523
-    regret: 23.559
-    promote: false
+    mae: 8.18
+    rmse: 11.015
+    cov80: 0.81
+    cov50: 0.522
+    regret: 29.7
+    promote: true
   - variant: +opponent
-    mae: 5.597
-    rmse: 7.198
-    cov80: 0.818
-    cov50: 0.529
-    regret: 23.571
-    promote: false
+    mae: 8.121
+    rmse: 10.934
+    cov80: 0.812
+    cov50: 0.528
+    regret: 29.292
+    promote: true
   - variant: +vegas
-    mae: 5.547
-    rmse: 7.168
-    cov80: 0.822
-    cov50: 0.529
-    regret: 23.076
+    mae: 8.104
+    rmse: 10.938
+    cov80: 0.81
+    cov50: 0.527
+    regret: 29.105
     promote: true

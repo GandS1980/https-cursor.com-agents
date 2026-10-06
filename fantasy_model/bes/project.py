@@ -135,14 +135,16 @@ def build_inputs(h: History, season: int, week: int, wp: WorkloadParams | None =
 
     teams = team_volume(th, teams_playing, wp).merge(pre, on="team", how="left")
     # DEF event rates (blended team history, shrunk to league)
-    dcols = ["dst_tds", "dst_return_tds", "dst_safeties", "dst_blocked_kicks", "dst_return_yards"]
+    dcols = ["dst_tds", "dst_return_tds", "dst_safeties", "dst_blocked_kicks", "dst_return_yards",
+             "dst_extra_point_returns"]
     dl = dh.sort_values(["season", "week"]).groupby("team").tail(wp.long_games)
     lg = dh[dcols].mean()
     dm = dl.groupby("team")[dcols].mean()
     dn = dl.groupby("team").size()
     for c in dcols:
         n = dn.reindex(teams["team"]).fillna(0).to_numpy()
-        teams[c] = (n * dm[c].reindex(teams["team"]).fillna(lg[c]).to_numpy() + 8 * lg[c]) / (n + 8)
+        lc = 0.0 if pd.isna(lg[c]) else lg[c]
+        teams[c] = (n * dm[c].reindex(teams["team"]).fillna(lc).to_numpy() + 8 * lc) / (n + 8)
 
     if feats.opponent_adjustment:
         of = opponent_factors(th, wp)

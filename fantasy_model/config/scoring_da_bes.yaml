@@ -1,89 +1,85 @@
-# Da B.E.S. scoring rules — the single source of truth for every point the model produces.
+# Da B.E.S. scoring rules (Yahoo league 686886) — the single source of truth for every point.
 #
-# STATUS: UNVERIFIED. The values below are PLACEHOLDERS (Yahoo-default-like) covering every rule
-# category the league uses (completions, carries, PPR, cumulative yardage bonuses, kicking distance,
-# turnovers, return yards, DEF). Replace each value with the league's exact setting from
-# Yahoo > League > Settings > Scoring, then run:
+# Values transcribed from Yahoo > League > Settings on 2026-10-06. Fractional and negative
+# points are enabled. `verified` stays false until
 #     python -m bes.cli validate-scoring --yahoo data/inputs/yahoo_actual_scores.csv
-# and only flip `verified: true` once the mismatch report is empty.
+# reports zero mismatches. Open questions that validation settles:
+#   * yardage bonuses: cumulative (160 rush yds = 10 + 5) vs highest-tier-only
+#   * DEF "Block Kick": whether blocked PATs count (currently FG + punt + PAT blocks)
+#   * DEF "Return Yards": kick + punt return yards (currently), or also turnover returns
+#   * DEF points allowed: all opponent points (currently) vs excluding DEF/ST scores
 name: "Da B.E.S."
 verified: false
 
-# Points per unit of a stat. Stat names are canonical names (see bes/stats.py).
 per_unit:
   # Passing
-  completions: 0.0            # PLACEHOLDER — league awards completions; set exact value
+  completions: 0.5
   incompletions: 0.0
-  passing_yards: 0.04
-  passing_tds: 4.0
-  passing_interceptions: -1.0
+  passing_yards: 0.04          # 25 yards per point
+  passing_tds: 6.0
+  passing_interceptions: -3.0
   sacks_suffered: 0.0
   # Rushing
-  carries: 0.0                # PLACEHOLDER — league awards carries; set exact value
-  rushing_yards: 0.1
+  carries: 0.5                 # rushing attempts
+  rushing_yards: 0.1           # 10 yards per point
   rushing_tds: 6.0
   # Receiving
-  receptions: 1.0             # PPR
+  receptions: 1.0
   targets: 0.0
-  receiving_yards: 0.1
+  receiving_yards: 0.1         # 10 yards per point
   receiving_tds: 6.0
   # Misc offense
+  return_yards: 0.04           # 25 yards per point (kick + punt returns)
+  return_tds: 6.0
   two_pt_conversions: 2.0
   fumbles_lost: -2.0
-  return_yards: 0.0           # PLACEHOLDER — league awards return yards; set exact value
-  return_tds: 6.0
   offensive_fumble_return_tds: 6.0
-  # Kicking (distance buckets are below; these are non-distance kicking stats)
+  # Kicking (distance buckets below)
   pat_made: 1.0
-  pat_missed: 0.0
-  # Defense / special teams (team DEF only)
-  dst_sacks: 1.0
-  dst_interceptions: 2.0
+  pat_missed: -1.0
+  # Defense / special teams
+  dst_sacks: 2.0
+  dst_interceptions: 3.0
   dst_fumble_recoveries: 2.0
   dst_tds: 6.0
-  dst_return_tds: 6.0
   dst_safeties: 2.0
-  dst_blocked_kicks: 2.0
-  dst_return_yards: 0.0       # PLACEHOLDER — set if DEF earns return yards
-  dst_extra_point_returns: 0.0  # needs play-by-play (defensive 2-pt returns); not yet derived -> keep 0 unless league uses it
-  dst_4th_down_stops: 0.0     # requires play-by-play; unavailable in team stats -> keep 0 unless league uses it
+  dst_blocked_kicks: 3.0
+  dst_return_yards: 0.1        # 10 yards per point
+  dst_return_tds: 6.0          # kickoff and punt return TDs
+  dst_extra_point_returns: 2.0
+  dst_4th_down_stops: 0.0      # not a league stat
 
-# Field goals by distance. Buckets map to canonical stats fg_made_<bucket>/fg_missed_<bucket>.
 fg_made_by_distance:
   "0_19": 3.0
-  "20_29": 3.0
-  "30_39": 3.0
-  "40_49": 4.0
-  "50_plus": 5.0
+  "20_29": 5.0
+  "30_39": 7.0
+  "40_49": 9.0
+  "50_plus": 12.0
 fg_missed_by_distance:
-  "0_19": 0.0
-  "20_29": 0.0
-  "30_39": 0.0
-  "40_49": 0.0
-  "50_plus": 0.0
+  "0_19": -3.0
+  "20_29": -3.0
+  "30_39": -3.0
+  "40_49": -3.0
+  "50_plus": -3.0
 
-# Yardage bonuses. mode:
-#   cumulative -> every threshold reached adds its points (100 & 150 both pay when 160 yards)
-#   highest    -> only the highest threshold reached pays
-# `stats` are summed before comparison (e.g. combined rushing + receiving yards).
+# "10 points at 300 yards; 5 points at 400 yards; 5 points at 500 yards"
 bonuses:
   - name: passing_yards_bonus
     stats: [passing_yards]
-    thresholds: [300, 400]
-    points: [0.0, 0.0]          # PLACEHOLDER
+    thresholds: [300, 400, 500]
+    points: [10.0, 5.0, 5.0]
     mode: cumulative
   - name: rushing_yards_bonus
     stats: [rushing_yards]
     thresholds: [100, 150, 200]
-    points: [0.0, 0.0, 0.0]     # PLACEHOLDER
+    points: [10.0, 5.0, 5.0]
     mode: cumulative
   - name: receiving_yards_bonus
     stats: [receiving_yards]
     thresholds: [100, 150, 200]
-    points: [0.0, 0.0, 0.0]     # PLACEHOLDER
+    points: [10.0, 5.0, 5.0]
     mode: cumulative
 
-# Team DEF points-allowed tiers: [min, max, points], inclusive bounds.
 dst_points_allowed_tiers:
   - [0, 0, 10.0]
   - [1, 6, 7.0]
@@ -92,10 +88,6 @@ dst_points_allowed_tiers:
   - [21, 27, 0.0]
   - [28, 34, -1.0]
   - [35, 999, -4.0]
-# How DEF points allowed is measured. Yahoo excludes some points; resolve during validation.
-#   all_points           -> opponent final score
-#   exclude_dst_scores   -> opponent score minus TDs scored by the opponent's defense/special teams
 dst_points_allowed_mode: all_points
 
-# Optional DEF yards-allowed tiers (empty = not used).
 dst_yards_allowed_tiers: []

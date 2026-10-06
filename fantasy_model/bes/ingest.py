@@ -32,7 +32,8 @@ GAMES = "schedules/games.parquet"
 
 PBP_COLS = ["game_id", "season", "week", "posteam", "season_type", "yardline_100", "rush_attempt",
             "pass_attempt", "sack", "two_point_attempt", "rusher_player_id", "receiver_player_id",
-            "passer_player_id", "air_yards", "qb_scramble"]
+            "passer_player_id", "air_yards", "qb_scramble", "defteam", "defensive_two_point_conv",
+            "defensive_extra_point_conv"]
 
 
 def _now() -> dt.datetime:
@@ -79,6 +80,15 @@ def redzone_from_pbp(pbp: pd.DataFrame) -> pd.DataFrame:
     return out.merge(team, on=["season", "week", "game_id", "team"], how="left")
 
 
+def dst_events_from_pbp(pbp: pd.DataFrame) -> pd.DataFrame:
+    """Per defense-game events not present in team stats (defensive PAT/2-pt returns)."""
+    p = pbp.dropna(subset=["defteam"])
+    ret = p["defensive_two_point_conv"].fillna(0) + p["defensive_extra_point_conv"].fillna(0)
+    keys = ["season", "week", "game_id", "defteam"]
+    out = p.assign(xp_ret=ret).groupby(keys)["xp_ret"].sum().reset_index()
+    return out.rename(columns={"defteam": "team", "xp_ret": "dst_extra_point_returns"})
+
+
 def ingest(seasons: list[int], include_pbp: bool = True, log=print) -> None:
     cfg = db.load_league()
     con = db.connect(cfg)
@@ -110,6 +120,7 @@ def ingest(seasons: list[int], include_pbp: bool = True, log=print) -> None:
                 pbp = fetch_parquet(PBP.format(s=s), columns=PBP_COLS)
                 rz = redzone_from_pbp(pbp)
                 db.write_parquet(rz, "redzone", str(s), cfg)
+                db.write_parquet(dst_events_from_pbp(pbp), "dst_pbp", str(s), cfg)
                 log(f"redzone {s}: {len(rz)} rows (from {len(pbp)} plays)")
             except FileNotFoundError:
                 log(f"pbp {s}: not published")
