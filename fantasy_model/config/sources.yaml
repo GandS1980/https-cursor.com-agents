@@ -1,0 +1,17 @@
+# Firecrawl sources (requires FIRECRAWL_API_KEY). Respect each site's terms of use.
+#
+# type: news         -> stored raw; roster names + status language are surfaced as flags
+# type: projections  -> markdown tables parsed; `columns` maps the site's headers to canonical stats
+#
+# Example entries (uncomment and edit):
+# sources:
+#   - name: team_injury_news
+#     type: news
+#     url: https://example.com/nfl/injury-report
+#   - name: outside_wr_projections
+#     type: projections
+#     position: WR
+#     url: https://example.com/nfl/projections/wr
+#     name_column: Player
+#     columns: {REC: receptions, YDS: receiving_yards, TDS: receiving_tds}
+sources: []

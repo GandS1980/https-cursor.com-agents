@@ -1,0 +1,7 @@
+data/*
+!data/inputs/
+data/inputs/*
+!data/inputs/README.md
+!data/inputs/*.example.csv
+__pycache__/
+.pytest_cache/

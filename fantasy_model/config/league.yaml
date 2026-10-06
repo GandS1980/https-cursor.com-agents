@@ -1,0 +1,41 @@
+league_name: "Da B.E.S."
+scoring_file: config/scoring_da_bes.yaml
+
+# Starting lineup slots, in order. Each slot lists the positions allowed in it.
+lineup_slots:
+  - {name: QB,    eligible: [QB]}
+  - {name: RB1,   eligible: [RB]}
+  - {name: RB2,   eligible: [RB]}
+  - {name: WT1,   eligible: [WR, TE]}
+  - {name: WT2,   eligible: [WR, TE]}
+  - {name: FLEX,  eligible: [WR, RB, TE]}
+  - {name: K,     eligible: [K]}
+  - {name: DEF,   eligible: [DEF]}
+
+# Inputs the user supplies (Yahoo exports). See data/inputs/README.md for formats.
+inputs:
+  roster: data/inputs/my_roster.csv
+  yahoo_actual_scores: data/inputs/yahoo_actual_scores.csv
+  yahoo_projections: data/inputs/yahoo_projections.csv
+  free_agents: data/inputs/free_agents.csv
+
+storage:
+  duckdb: data/bes.duckdb
+  parquet_dir: data/parquet
+
+history_seasons: [2023, 2024, 2025, 2026]
+
+simulation:
+  n_sims: 10000
+  seed: 7
+
+# Probability a player plays given the final injury-report designation. These defaults are
+# REPLACED by empirical rates when `python -m bes.cli calibrate-injuries` has been run.
+play_probability:
+  None: 0.99
+  Questionable: 0.80
+  Doubtful: 0.15
+  Out: 0.0
+  IR: 0.0
+# Share multiplier applied in the "limited" scenario (player active but on a reduced role).
+limited_share_multiplier: 0.65
