@@ -151,6 +151,8 @@ def _team_block(rng, team_row, tp: pd.DataFrame, inp: SlateInputs, n: int, u: np
         cw = np.append(tp["rush_td_w"].fillna(1).to_numpy(), 1.0)
     else:
         rw = cw = np.ones(P + 1)
+    if feats.rush_td_rate:
+        cw = cw * np.append(tp["rush_td_rate_w"].fillna(1).to_numpy(), 1.0)
     rec_td = _alloc(rng, pass_td_team, rec * rw[None, :], rec)
     rush_td = _alloc(rng, rush_td_team, carries * cw[None, :], carries)
 

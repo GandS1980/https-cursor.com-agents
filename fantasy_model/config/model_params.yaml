@@ -7,7 +7,7 @@ workload:
   team_recent_weight: 0.4
   team_prior_games: 4.0
 features:
-  redzone_td_weighting: true
+  redzone_td_weighting: false
   opponent_adjustment: true
   vegas_scoring: true
   vegas_weight: 0.6
@@ -46,3 +46,12 @@ evidence:
     cov50: 0.527
     regret: 29.105
     promote: true
+  combined:
+  - variant: all3
+    mae: 8.125
+    regret: 29.974
+  - variant: vegas+opp
+    mae: 8.103
+    regret: 28.811
+  decision: 'vegas+opponent: best combined MAE and regret on 2025; redzone helps alone
+    but hurts in combination'

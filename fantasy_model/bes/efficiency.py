@@ -20,6 +20,7 @@ from .stats import FG_BUCKETS
 @dataclass(frozen=True)
 class EfficiencyFeatures:
     redzone_td_weighting: bool = True   # goal-line / red-zone role tilts TD allocation
+    rush_td_rate: bool = False          # player rushing-TD rate (shrunk) tilts rushing TD allocation
     opponent_adjustment: bool = False   # opponent yards-allowed factors
     vegas_scoring: bool = True          # team TD/FG rates anchored to the implied team total
     vegas_weight: float = 0.6
@@ -75,6 +76,10 @@ def player_rates(hist: pd.DataFrame, players: pd.DataFrame, long_games: int = 24
     n_t, n_c = a["targets"].fillna(0), a["carries"].fillna(0)
     out["rec_td_w"] = ((n_t * rz_tgt_ratio.fillna(1) + PSEUDO["rec_td_w"]) / (n_t + PSEUDO["rec_td_w"])).clip(0.2, 3)
     out["rush_td_w"] = ((n_c * rz_car_ratio.fillna(1) + PSEUDO["rush_td_w"]) / (n_c + PSEUDO["rush_td_w"])).clip(0.2, 3)
+    # Rushing TD rate relative to the league (QB sneaks, goal-line backs), shrunk to the position.
+    league_rush_td = by_pos["ctd"].sum() / max(by_pos["car"].sum(), 1)
+    out["rush_td_rate_w"] = (_shrunk(a["rush_tds"], a["carries"], pm("ctd", "car", league_rush_td),
+                                     PSEUDO["rush_td_w"]) / league_rush_td).clip(0.3, 3)
     out["int_rate"] = _shrunk(a["ints"], a["att"], 0.023, PSEUDO["int_rate"])
     r = ret.reindex(out.index)
     out["returner"] = (r["ret_n"].fillna(0) + r["kr_n"].fillna(0)) >= 2

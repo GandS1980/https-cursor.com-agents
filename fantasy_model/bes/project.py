@@ -126,7 +126,20 @@ def build_inputs(h: History, season: int, week: int, wp: WorkloadParams | None =
         if ranks.notna().any():
             players.loc[idx, "att_share"] = np.select([ranks == ranks.min(), ranks == ranks[ranks > ranks.min()].min()],
                                                       [1.0, 1e-3], 1e-6)
+    # QB rushing share is measured only in games the QB started; relief appearances and
+    # injury-shortened games would dilute a running QB's role.
+    started = ph[(ph["position"] == "QB") & (ph["attempts"] >= 0.5 * ph["team_attempts"])]
+    qrows = players.loc[qb, ["player_id", "position", "depth_rank"]]
+    if len(qrows) and len(started):
+        qs = player_shares(started, qrows, wp).set_index("player_id")["car_share"]
+        players.loc[qb, "car_share"] = players.loc[qb, "player_id"].map(qs).fillna(players.loc[qb, "car_share"]).to_numpy()
+    # Backup QBs only carry when they start (handled per simulated game), so they must not
+    # crowd the starter or the RBs out of the team's carry budget during normalization.
+    backup = qb & (players["att_share"] < 0.5)
+    backup_car = players.loc[backup, "car_share"].copy()
+    players.loc[backup, "car_share"] = 0.0
     players = normalize_team_shares(players)
+    players.loc[backup_car.index, "car_share"] = backup_car
 
     league = league_rates(ph)
     kr = kicker_rates(ph, players[players["position"] == "K"][["player_id"]], league)
@@ -138,7 +151,9 @@ def build_inputs(h: History, season: int, week: int, wp: WorkloadParams | None =
     dcols = ["dst_tds", "dst_return_tds", "dst_safeties", "dst_blocked_kicks", "dst_return_yards",
              "dst_extra_point_returns"]
     dl = dh.sort_values(["season", "week"]).groupby("team").tail(wp.long_games)
-    lg = dh[dcols].mean()
+    # League baseline from the most recent ~season only: rule changes (e.g. the 2025 kickoff
+    # rule raised return yardage) make older seasons a biased anchor.
+    lg = dh.sort_values(["season", "week"]).tail(32 * 17)[dcols].mean()
     dm = dl.groupby("team")[dcols].mean()
     dn = dl.groupby("team").size()
     for c in dcols:

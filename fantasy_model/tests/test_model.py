@@ -77,7 +77,7 @@ def _toy_slate():
         "rz_tgt_share": 0.1, "rz_car_share": 0.3, "gl_car_share": 0.3,
         "att_share": [0.97, 0, 0, 0, 0, 1, 0, 0, 0, 0.03],
         "catch_rate": 0.65, "ypr": 10.0, "ypc": 4.3, "fumble_per_touch": 0.004, "two_pt_per_game": 0.02,
-        "rec_td_w": 1.0, "rush_td_w": 1.0, "int_rate": 0.02, "returner": False, "ret_yds_mu": 0.0,
+        "rec_td_w": 1.0, "rush_td_w": 1.0, "rush_td_rate_w": 1.0, "int_rate": 0.02, "returner": False, "ret_yds_mu": 0.0,
         "fg_make_mult": 1.0,
     })
     teams = pd.DataFrame({"team": ["A", "B"], "opponent": ["B", "A"], "game_id": ["g", "g"],
