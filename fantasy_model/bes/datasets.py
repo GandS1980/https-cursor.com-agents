@@ -48,8 +48,8 @@ def build_player_game(season_type: str = "REG") -> pd.DataFrame:
             filler = snap_only.drop(columns="_merge").copy()
             stat_cols = [c for c in pw.columns if pd.api.types.is_numeric_dtype(pw[c])
                          and c not in filler.columns and c not in ("season", "week")]
-            for c in stat_cols:
-                filler[c] = 0.0  # genuinely zero: was on the field, recorded nothing
+            # genuinely zero: was on the field, recorded nothing
+            filler = pd.concat([filler, pd.DataFrame(0.0, index=filler.index, columns=stat_cols)], axis=1)
             pw = pd.concat([pw, filler], ignore_index=True)
     except FileNotFoundError:
         pw["offense_snaps"] = np.nan
@@ -65,6 +65,7 @@ def build_player_game(season_type: str = "REG") -> pd.DataFrame:
         for c in ("rz_carries", "gl_carries", "rz_targets", "gl_targets", "ez_targets"):
             pw[c] = np.nan
 
+    pw = pw.copy()
     pw["routes"] = np.nan  # no verified charting feed yet
     pw["yprr"] = np.nan
 

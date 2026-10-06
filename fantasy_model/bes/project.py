@@ -118,6 +118,14 @@ def build_inputs(h: History, season: int, week: int, wp: WorkloadParams | None =
     players.loc[players["position"] == "QB", ["tgt_share", "rz_tgt_share"]] = 0.0
     players.loc[players["position"] == "K", ["tgt_share", "rz_tgt_share", "car_share", "rz_car_share",
                                              "gl_car_share", "att_share"]] = 0.0
+    # Starting QB comes from the point-in-time depth chart: QB1 starts unless inactive, then QB2.
+    # (History shares mislead: a backup's past starts elsewhere would make him a co-starter.)
+    qb = players["position"] == "QB"
+    for team, idx in players[qb].groupby("team").groups.items():
+        ranks = players.loc[idx, "depth_rank"]
+        if ranks.notna().any():
+            players.loc[idx, "att_share"] = np.select([ranks == ranks.min(), ranks == ranks[ranks > ranks.min()].min()],
+                                                      [1.0, 1e-3], 1e-6)
     players = normalize_team_shares(players)
 
     league = league_rates(ph)

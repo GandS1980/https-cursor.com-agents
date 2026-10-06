@@ -1,0 +1,47 @@
+workload:
+  recent_games: 2
+  long_games: 8
+  recent_weight: 0.5
+  prior_games: 0.5
+  team_recent_games: 4
+  team_recent_weight: 0.4
+  team_prior_games: 4.0
+features:
+  redzone_td_weighting: false
+  opponent_adjustment: false
+  vegas_scoring: true
+  vegas_weight: 0.6
+evidence:
+  tune_seasons:
+  - 2024
+  test_seasons:
+  - 2025
+  ablation:
+  - variant: base
+    mae: 5.801
+    rmse: 7.497
+    cov80: 0.82
+    cov50: 0.531
+    regret: 23.729
+    promote: false
+  - variant: +redzone
+    mae: 5.802
+    rmse: 7.5
+    cov80: 0.822
+    cov50: 0.532
+    regret: 23.767
+    promote: false
+  - variant: +opponent
+    mae: 5.793
+    rmse: 7.472
+    cov80: 0.827
+    cov50: 0.532
+    regret: 24.05
+    promote: false
+  - variant: +vegas
+    mae: 5.794
+    rmse: 7.502
+    cov80: 0.821
+    cov50: 0.533
+    regret: 23.613
+    promote: true

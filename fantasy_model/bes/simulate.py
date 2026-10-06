@@ -113,8 +113,7 @@ def _team_block(rng, team_row, tp: pd.DataFrame, inp: SlateInputs, n: int, u: np
         any_qb = w.sum(axis=1) > 1e-9
         starter[~any_qb] = 0.0
         att = starter
-        qb_car_base = tp["car_share"].fillna(0).to_numpy()[qb].max()
-        car[:, qb] = qb_car_base * starter[:, qb]
+        car[:, qb] = tp["car_share"].fillna(0).to_numpy()[qb][None, :] * starter[:, qb]
 
     # team volume
     pass_mult = _lognorm(rng, cfg.volume_sd, n) * u ** -0.15

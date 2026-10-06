@@ -55,9 +55,11 @@ def player_rates(hist: pd.DataFrame, players: pd.DataFrame, long_games: int = 24
     out = players.set_index("player_id")[["position"]].copy()
     a = agg.reindex(out.index)
     pos = out["position"]
+    h = h.assign(touches=h["carries"].fillna(0) + h["receptions"].fillna(0))
     by_pos = h.groupby("position").agg(rec=("receptions", "sum"), tgt=("targets", "sum"),
                                              ryd=("receiving_yards", "sum"), car=("carries", "sum"),
                                              cyd=("rushing_yards", "sum"), rtd=("receiving_tds", "sum"),
+                                             tch=("touches", "sum"),
                                              ctd=("rushing_tds", "sum"), fum=("fumbles_lost", "sum"),
                                              g=("week", "size"), tp=("two_pt_conversions", "sum"))
     pm = lambda num, den, d: (by_pos[num] / by_pos[den].replace(0, np.nan)).reindex(pos).fillna(d).to_numpy()  # noqa: E731
@@ -65,7 +67,7 @@ def player_rates(hist: pd.DataFrame, players: pd.DataFrame, long_games: int = 24
     out["ypr"] = _shrunk(a["rec_yds"], a["receptions"], pm("ryd", "rec", 10.0), PSEUDO["ypr"]).clip(3, 25)
     out["ypc"] = _shrunk(a["rush_yds"], a["carries"], pm("cyd", "car", 4.2), PSEUDO["ypc"]).clip(1, 8)
     out["fumble_per_touch"] = _shrunk(a["fum"], a["carries"].fillna(0) + a["receptions"].fillna(0),
-                                      pm("fum", "car", 0.004), PSEUDO["fumble_per_touch"])
+                                      pm("fum", "tch", 0.004), PSEUDO["fumble_per_touch"])
     out["two_pt_per_game"] = _shrunk(a["two_pt"], a["games"], pm("tp", "g", 0.02), PSEUDO["two_pt"])
     # TD weights relative to opportunity (1.0 = typical); red-zone role raises them.
     rz_tgt_ratio = (a["rz_tgt"] / a["team_rz_tgt"].replace(0, np.nan)) / (a["targets"] / a["team_tgt"].replace(0, np.nan))

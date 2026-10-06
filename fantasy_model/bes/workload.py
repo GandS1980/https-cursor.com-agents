@@ -189,7 +189,7 @@ def normalize_team_shares(s: pd.DataFrame, min_other: float = 0.03) -> pd.DataFr
     """Keep each team's known shares summing to <= 1 - min_other (the rest goes to 'other')."""
     s = s.copy()
     for col in SHARE_STATS:
-        if col not in s:
+        if col not in s or col == "att_share":  # QB start share is a categorical pick, not a split
             continue
         tot = s.groupby("team")[col].transform("sum")
         cap = 1 - min_other
