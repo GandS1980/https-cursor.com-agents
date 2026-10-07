@@ -51,12 +51,42 @@ def current_week(h: History, now: dt.datetime | None = None) -> tuple[int, int]:
     return int(first["season"]), int(first["week"])
 
 
+def roster_statuses(path: str | Path) -> dict[str, str]:
+    """Injury designations typed into the roster CSV `status` column (e.g. copied from Yahoo)."""
+    raw = pd.read_csv(path)
+    if "status" not in raw:
+        return {}
+    r = load_roster(path).merge(raw.assign(_i=range(len(raw)))[["player_name", "status"]], on="player_name", how="left")
+    return {pid: st for pid, st in zip(r["player_id"], r["status"]) if isinstance(st, str) and st.strip()}
+
+
+def apply_statuses(inp, statuses: dict[str, str], cfg: dict) -> list[str]:
+    """Use roster-supplied designations only where nflverse has no report for this week."""
+    from .project import _play_probability
+    applied = []
+    p = inp.players
+    for pid, st in statuses.items():
+        m = (p["player_id"] == pid) & p["report_status"].isna()
+        if m.any():
+            p.loc[m, "report_status"] = st
+            applied.append(pid)
+    p["p_play"] = _play_probability(p["report_status"], cfg)
+    return applied
+
+
 def publish(h: History, season: int, week: int, n_sims: int = 10_000, seed: int = 7,
-            overrides: dict[str, str] | None = None, log=print) -> SimResult:
+            overrides: dict[str, str] | None = None, statuses: dict[str, str] | None = None,
+            log=print) -> SimResult:
     cfg = db.load_league()
     rules = load_rules(cfg)
     wp, feats = load_model_params()
     inp = build_inputs(h, season, week, wp, feats, cfg)
+    if statuses is None:
+        rp = db.ROOT / cfg["inputs"]["roster"]
+        statuses = roster_statuses(rp) if rp.exists() else {}
+    applied = apply_statuses(inp, statuses, cfg)
+    if applied:
+        log(f"roster-supplied injury designations applied to {len(applied)} player(s) (no official report yet)")
     res = simulate_slate(inp, rules, n_sims=n_sims, seed=seed, overrides=overrides)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     tag = f"{season}_w{week:02d}"

@@ -37,9 +37,20 @@ def match_players(yahoo: pd.DataFrame, ids: pd.DataFrame) -> pd.DataFrame:
         m = dict(zip(ids["yahoo_id"].astype(str), ids["gsis_id"]))
         y["player_id"] = y["player_id"].fillna(y["yahoo_id"].astype(str).str.replace(r"\.0$", "", regex=True).map(m))
     if "player_name" in y:
-        ids = ids.assign(_n=ids["full_name"].map(_norm))
-        by_name = ids.drop_duplicates("_n", keep=False).set_index("_n")["gsis_id"]
-        y["player_id"] = y["player_id"].fillna(y["player_name"].map(_norm).map(by_name))
+        # Most specific key first: name+position+team, then name+position, then a unique name.
+        # Common names (Lamar Jackson, Justin Jefferson) belong to several NFL players.
+        ids = ids.assign(_n=ids["full_name"].map(_norm), _p=ids["position"].astype(str).str.upper(),
+                         _t=ids["team"].astype(str).str.upper())
+        y["_n"] = y["player_name"].map(_norm)
+        y["_p"] = y["position"].astype(str).str.upper() if "position" in y else ""
+        y["_t"] = y["team"].astype(str).str.upper() if "team" in y else ""
+        for keys in (["_n", "_p", "_t"], ["_n", "_p"], ["_n"]):
+            if not all(k in y for k in keys):
+                continue
+            lookup = ids.drop_duplicates(keys, keep=False).set_index(keys)["gsis_id"]
+            idx = pd.MultiIndex.from_frame(y[keys]) if len(keys) > 1 else y[keys[0]]
+            y["player_id"] = y["player_id"].fillna(pd.Series(lookup.reindex(idx).to_numpy(), index=y.index))
+        y = y.drop(columns=["_n", "_p", "_t"])
     return y
 
 

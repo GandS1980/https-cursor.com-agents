@@ -31,10 +31,12 @@ simulation:
 
 # Probability a player plays given the final injury-report designation. These defaults are
 # REPLACED by empirical rates when `python -m bes.cli calibrate-injuries` has been run.
+# Measured with `calibrate-injuries` on 2023-2025 skill players + K (final Friday designations):
+# Questionable 59.1% played (n=1335), Doubtful 0.6% (n=156), Out 0% (n=1072).
 play_probability:
   None: 0.99
-  Questionable: 0.80
-  Doubtful: 0.15
+  Questionable: 0.59
+  Doubtful: 0.01
   Out: 0.0
   IR: 0.0
 # Share multiplier applied in the "limited" scenario (player active but on a reduced role).

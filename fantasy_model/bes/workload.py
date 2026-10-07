@@ -39,6 +39,9 @@ class WorkloadParams:
     team_recent_games: int = 4
     team_recent_weight: float = 0.4
     team_prior_games: float = 4.0
+    # Skip games where an established player (median snap share >= 0.5) played under this
+    # fraction of his usual snaps: an injury exit or ejection, not his role. 0 disables.
+    partial_game_frac: float = 0.0  # tested 0.2-0.5 on 2024-25: no gain, so off
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -107,10 +110,20 @@ def fit_depth_priors(player_game: pd.DataFrame, depth: pd.DataFrame) -> dict:
 
 
 # ----------------------------------------------------------------------------- estimates
+def drop_partial_games(h: pd.DataFrame, p: WorkloadParams) -> pd.DataFrame:
+    if p.partial_game_frac <= 0 or "offense_pct" not in h:
+        return h
+    recent = h.groupby("player_id").tail(p.long_games)
+    med = recent.groupby("player_id")["offense_pct"].median()
+    m = h["player_id"].map(med)
+    partial = (m >= 0.5) & (h["offense_pct"] < p.partial_game_frac * m)
+    return h[~partial]
+
+
 def player_shares(hist: pd.DataFrame, players: pd.DataFrame, p: WorkloadParams,
                   priors: dict | None = None) -> pd.DataFrame:
     """Blended share estimates for `players` (player_id, position, depth_rank) from history."""
-    h = _order(hist)
+    h = drop_partial_games(_order(hist), p)
     out = players.set_index("player_id").copy()
     for s, (num, den) in SHARE_STATS.items():
         if num not in h or den not in h:
