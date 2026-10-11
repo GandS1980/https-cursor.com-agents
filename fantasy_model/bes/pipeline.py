@@ -70,7 +70,7 @@ def apply_statuses(inp, statuses: dict[str, str], cfg: dict) -> list[str]:
         if m.any():
             p.loc[m, "report_status"] = st
             applied.append(pid)
-    p["p_play"] = _play_probability(p["report_status"], cfg)
+    p["p_play"] = _play_probability(p["report_status"], cfg, p.get("practice_status"))
     return applied
 
 

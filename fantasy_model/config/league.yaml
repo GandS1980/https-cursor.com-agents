@@ -39,5 +39,10 @@ play_probability:
   Doubtful: 0.01
   Out: 0.0
   IR: 0.0
+# Questionable players, by Friday practice participation (2023-2025, n=329 / 773 / 206).
+questionable_by_practice:
+  Full Participation: 0.68
+  Limited Participation: 0.59
+  Did Not Participate: 0.45
 # Share multiplier applied in the "limited" scenario (player active but on a reduced role).
 limited_share_multiplier: 0.65

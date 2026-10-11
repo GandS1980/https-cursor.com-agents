@@ -58,10 +58,17 @@ class SlateInputs:
     meta: dict = field(default_factory=dict)
 
 
-def _play_probability(status: pd.Series, cfg: dict) -> pd.Series:
+def _play_probability(status: pd.Series, cfg: dict, practice: pd.Series | None = None) -> pd.Series:
     table = {str(k): float(v) for k, v in cfg["play_probability"].items()}
     s = status.fillna("None").astype(str)
-    return s.map(lambda x: table.get(x, table.get("None", 0.99)))
+    out = s.map(lambda x: table.get(x, table.get("None", 0.99)))
+    q_tbl = cfg.get("questionable_by_practice", {})
+    if practice is not None and q_tbl:
+        pr = practice.fillna("").astype(str)
+        for key, v in q_tbl.items():
+            hit = (s == "Questionable") & pr.str.contains(key, case=False, regex=False)
+            out = out.where(~hit, float(v))
+    return out
 
 
 def slate_players(h: History, season: int, week: int) -> pd.DataFrame:
@@ -100,9 +107,10 @@ def build_inputs(h: History, season: int, week: int, wp: WorkloadParams | None =
         players["depth_rank"] = np.nan
 
     inj = h.injuries[(h.injuries["season"] == season) & (h.injuries["week"] == week)]
-    inj = inj.rename(columns={"gsis_id": "player_id"})[["player_id", "report_status"]].drop_duplicates("player_id", keep="last")
+    cols = ["player_id", "report_status"] + (["practice_status"] if "practice_status" in inj else [])
+    inj = inj.rename(columns={"gsis_id": "player_id"})[cols].drop_duplicates("player_id", keep="last")
     players = players.merge(inj, on="player_id", how="left")
-    players["p_play"] = _play_probability(players["report_status"], cfg)
+    players["p_play"] = _play_probability(players["report_status"], cfg, players.get("practice_status"))
 
     # Drop deep reserves with no recent role (keeps the slate tractable, avoids noise).
     recent_ids = set(ph[ph["season"] >= season - 1]["player_id"])
