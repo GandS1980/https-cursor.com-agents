@@ -1,0 +1,25 @@
+{
+  "name": "deckforge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Browser DJ software: dynamic beatgrids, multi-provider crates with pre-analysis, and cue loops.",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 4173 --strictPort",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "node e2e/smoke.mjs",
+    "analyze": "tsx src/cli/analyze.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "playwright-core": "^1.56.1",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.3"
+  }
+}
