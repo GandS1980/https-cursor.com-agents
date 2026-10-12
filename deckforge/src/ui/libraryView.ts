@@ -37,7 +37,7 @@ export class LibraryView {
         this.crates,
         h("div.sidebar-actions", {},
           h("button.small", { onclick: () => fileInput.click() }, "+ Add files"),
-          h("button.small", { onclick: () => { const n = prompt("Crate name"); if (n) { const c = this.session.createCrate(n); this.select(c.id); } } }, "+ New crate"),
+          this.newCrateForm(),
           fileInput,
         ),
       ),
@@ -60,6 +60,20 @@ export class LibraryView {
     });
     this.renderServices();
     this.renderCrates();
+  }
+
+  /** Inline name field: embedded viewers block window.prompt(). */
+  private newCrateForm(): HTMLFormElement {
+    const input = h("input.crate-name", { id: "new-crate-name", type: "text", placeholder: "New crate name", "aria-label": "New crate name" }) as HTMLInputElement;
+    const form = h("form.new-crate", {}, input, h("button.small", { type: "submit" }, "+ Crate")) as HTMLFormElement;
+    form.onsubmit = (e) => {
+      e.preventDefault();
+      const name = input.value.trim();
+      if (!name) return;
+      input.value = "";
+      this.select(this.session.createCrate(name).id);
+    };
+    return form;
   }
 
   private select(id: string): void {
