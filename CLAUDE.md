@@ -12,11 +12,3 @@ to look.
   an API call, a browser step), stop at that point and ask.
 - One "yes" covers one task only. It does not carry over to the next task,
   a follow-up, or a later session.
-
-## Saved repos
-
-- `vendor/phone-harness-mcp/` — snapshot of https://github.com/phone-harness/mcp
-  (MIT, upstream commit b0572ff, saved 2026-11-03). MCP server that lets an agent
-  drive a cloud iPhone / Android emulator (screen, tap, type, swipe, open apps).
-  Not installed or run. A phone agent can reach banking/payment apps, so the
-  money-site rule above applies to anything done through it.
